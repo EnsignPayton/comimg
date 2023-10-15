@@ -11,12 +11,20 @@ static void Run(ConsoleOptions options)
     if (options.LiveVideo)
     {
         Console.Clear();
-        RunVideo(options.Contrast);
+        RunLiveVideo(options.Contrast);
     }
     else if (File.Exists(options.InputFile))
     {
         Console.Clear();
-        RunSingleImage(options.InputFile, options.Contrast);
+        if (options.InputFile.EndsWith("mp4") ||
+            options.InputFile.EndsWith("mkv"))
+        {
+            RunVideoFile(options.InputFile, options.Contrast);
+        }
+        else
+        {
+            RunSingleImage(options.InputFile, options.Contrast);
+        }
     }
     else
     {
@@ -24,7 +32,7 @@ static void Run(ConsoleOptions options)
     }
 }
 
-static void RunVideo(float contrast)
+static void RunLiveVideo(float contrast)
 {
     var ffmpeg = Process.Start(new ProcessStartInfo("ffmpeg",
         // Don't spam stdout
@@ -43,11 +51,11 @@ static void RunVideo(float contrast)
 
     AppDomain.CurrentDomain.ProcessExit += (_, _) => ffmpeg.Kill();
 
-    bool loop = true;
-    Console.CancelKeyPress += (_, _) => loop = false;
-
     try
     {
+        bool loop = true;
+        Console.CancelKeyPress += (_, _) => loop = false;
+
         int frameCount = 0;
         while (loop)
         {
@@ -69,6 +77,48 @@ static void RunVideo(float contrast)
     finally
     {
         ffmpeg.Kill();
+    }
+}
+
+static void RunVideoFile(string filePath, float contrast)
+{
+    bool loop = true;
+    Console.CancelKeyPress += (_, _) => loop = false;
+
+    var startTime = DateTime.Now;
+    int frameCount = 0;
+    while (loop)
+    {
+        var offset = DateTime.Now - startTime;
+        var ffmpeg = Process.Start(new ProcessStartInfo("ffmpeg",
+            // Don't spam stdout
+            "-hide_banner -loglevel error" +
+            // Pull from video file
+            $" -ss {offset} -t 1 -i \"{filePath}\"" +
+            // Use mjpeg to write a jpg at 10fps
+            " -y frame.jpg")
+        {
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+        })!;
+
+        ffmpeg.OutputDataReceived += (_, e) => Debug.WriteLine(e.Data);
+        ffmpeg.ErrorDataReceived += (_, e) => Debug.WriteLine(e.Data);
+
+        ffmpeg.WaitForExit();
+
+        Console.SetCursorPosition(0, Console.WindowHeight - 1);
+        Console.Write($"Frame {frameCount}");
+
+        try
+        {
+            RunSingleImage("frame.jpg", contrast);
+        }
+        catch
+        {
+        }
+
+        frameCount++;
     }
 }
 
