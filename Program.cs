@@ -34,13 +34,21 @@ static void Run(ConsoleOptions options)
 
 static void RunLiveVideo(float contrast)
 {
-    var ffmpeg = Process.Start(new ProcessStartInfo("ffmpeg",
-        // Don't spam stdout
-        "-hide_banner -loglevel error" +
-        // Pull from first video device on linux
-        " -f v4l2 -i /dev/video0" +
-        // Use mjpeg to write a jpg at 10fps
-        " -vf fps=fps=10 -update 1 -y frame.jpg")
+    // Don't spam stdout
+    var args = "-hide_banner -loglevel error";
+
+    // Pull from video device based on platform
+    if (OperatingSystem.IsLinux())
+        args += " -f v4l2 -i /dev/video0";
+    else if (OperatingSystem.IsWindows())
+        args += " -f dshow -i video=\"Integrated Webcam\"";
+    else
+        throw new NotImplementedException();
+
+    // Use mjpeg to write a jpg at 10fps
+    args += " -vf fps=fps=10 -update 1 -y frame.jpg";
+
+    var ffmpeg = Process.Start(new ProcessStartInfo("ffmpeg", args)
     {
         RedirectStandardOutput = true,
         RedirectStandardError = true,
