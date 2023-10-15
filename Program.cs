@@ -93,11 +93,11 @@ void RunSingleImage(string filePath, float contrast)
 class ConsoleOptions
 {
     [Option('i', "input", SetName = "input", HelpText = "Input file")]
-    public string InputFile { get; set; } = string.Empty;
+    public string InputFile { get; init; } = string.Empty;
 
     [Option('l', "live", SetName = "input", HelpText = "Use ffmpeg to display live video")]
-    public bool LiveVideo { get; set; }
+    public bool LiveVideo { get; init; }
 
     [Option('c', "contrast", HelpText = "Contrast ratio, from 0 to 1")]
-    public float Contrast { get; set; }
+    public float Contrast { get; init; }
 }
