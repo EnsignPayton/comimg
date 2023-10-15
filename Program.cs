@@ -1,19 +1,27 @@
 ﻿using System.Diagnostics;
+using CommandLine;
 using conimg;
 using SkiaSharp;
 
-Console.Clear();
+Parser.Default.ParseArguments<ConsoleOptions>(args).WithParsed(Run);
+return;
 
-var path = args.Length >= 1 ? args[0] : "image.png";
-var contrastRatio = args.Length >= 2 && float.TryParse(args[1], out var val) ? val : 0;
-
-if (path == "--video")
+void Run(ConsoleOptions options)
 {
-    RunVideo(contrastRatio);
-}
-else if (File.Exists(path))
-{
-    RunSingleImage(path, contrastRatio);
+    if (options.LiveVideo)
+    {
+        Console.Clear();
+        RunVideo(options.Contrast);
+    }
+    else if (File.Exists(options.InputFile))
+    {
+        Console.Clear();
+        RunSingleImage(options.InputFile, options.Contrast);
+    }
+    else
+    {
+        Console.Error.WriteLine($"Input file \"{options.InputFile}\" not found");
+    }
 }
 
 void RunVideo(float contrast)
@@ -80,4 +88,16 @@ void RunSingleImage(string filePath, float contrast)
     }
 
     ConsoleGraphics.Display(bitmapCopy);
+}
+
+class ConsoleOptions
+{
+    [Option('i', "input", SetName = "input", HelpText = "Input file")]
+    public string InputFile { get; set; } = string.Empty;
+
+    [Option('l', "live", SetName = "input", HelpText = "Use ffmpeg to display live video")]
+    public bool LiveVideo { get; set; }
+
+    [Option('c', "contrast", HelpText = "Contrast ratio, from 0 to 1")]
+    public float Contrast { get; set; }
 }
