@@ -6,7 +6,7 @@ using SkiaSharp;
 Parser.Default.ParseArguments<ConsoleOptions>(args).WithParsed(Run);
 return;
 
-void Run(ConsoleOptions options)
+static void Run(ConsoleOptions options)
 {
     if (options.LiveVideo)
     {
@@ -24,7 +24,7 @@ void Run(ConsoleOptions options)
     }
 }
 
-void RunVideo(float contrast)
+static void RunVideo(float contrast)
 {
     var ffmpeg = Process.Start(new ProcessStartInfo("ffmpeg",
         // Don't spam stdout
@@ -72,7 +72,7 @@ void RunVideo(float contrast)
     }
 }
 
-void RunSingleImage(string filePath, float contrast)
+static void RunSingleImage(string filePath, float contrast)
 {
     var imageBytes = File.ReadAllBytes(filePath);
     var imageBitmap = SKBitmap.Decode(imageBytes);
