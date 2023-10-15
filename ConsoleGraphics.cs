@@ -38,9 +38,9 @@ public static class ConsoleGraphics
 
         var sw = Stopwatch.StartNew();
 
-        Console.SetCursorPosition(0, 0);
-        for (int cY = 0; cY < cHeight; cY++)
+        for (int cY = 0; cY < cHeight - 1; cY++)
         {
+            Console.SetCursorPosition(0, cY);
             var iY = (int)((double)iHeight * cY / cHeight);
 
             for (int cX = 0; cX < cWidth; cX++)
@@ -53,17 +53,17 @@ public static class ConsoleGraphics
                 Console.ForegroundColor = color;
                 Console.Write(color is ConsoleColor.Black ? ' ' : Block);
             }
-
-            Console.WriteLine();
         }
 
         sw.Stop();
         Console.ForegroundColor = originalColor;
-        Console.WriteLine($"Completed in {sw.ElapsedTicks:N0} ticks");
+        Debug.WriteLine($"Completed in {sw.ElapsedTicks:N0} ticks");
     }
 
     private static Vector3 GetVector(SKColor pixel) =>
-        new(pixel.Red / 256f, pixel.Green / 256f, pixel.Blue / 256f);
+        new(Magnitude(pixel.Red), Magnitude(pixel.Green), Magnitude(pixel.Blue));
+
+    private static float Magnitude(byte value) => value / 256f;
 
     private static int GetNearestColorIndex(Vector3 value)
     {
